@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+use App\Http\Requests;
+use App\Comment;
+use App\Advertisement;
+use Session;
+use Illuminate\Support\Facades\Auth;
+
+class CommentController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth', ['except' => 'store']);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function postComment(Request $request, $advertisement_id)
+    {
+
+        if (auth::guest()) {
+            return redirect('register');
+        }
+        else {
+
+             DB::insert('call Store_Comments (?,?,?)',array((1) , $advertisement_id , $request->Comment );
+
+        return redirect('ads-details/'.$advertisement_id);
+        }
+        
+    }
+
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $comment = Comment::find($id);
+        return view('comments.edit')->withComment($comment);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $comment = Comment::find($id);
+
+        $this->validate($request, array('comment' => 'required'));
+
+        $comment->comment = $request->comment;
+        $comment->save();
+
+        Session::flash('success', 'Comment updated');
+
+        return redirect()->route('posts.show', $comment->advertisement->id);
+    }
+
+    public function delete($id)
+    {
+        $comment = Comment::find($id);
+        return view('comments.delete')->withComment($comment);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $comment = Comment::find($id);
+        $advertisement_id = $comment->advertisement->id;
+        $comment->delete();
+
+        Session::flash('success', 'Deleted Comment');
+
+        return redirect()->route('posts.show', $advertisement_id);
+    }
+}
